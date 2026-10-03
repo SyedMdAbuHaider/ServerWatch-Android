@@ -27,7 +27,7 @@ class MonitoringService : Service() {
     }
 
     private suspend fun loop() {
-        while (isActive) {
+        while (currentCoroutineContext().isActive) {
             val servers = Prefs.loadServers(this@MonitoringService)
             servers.forEach { config ->
                 val result = runCatching { Api.fetch(config) }
