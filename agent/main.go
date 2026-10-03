@@ -41,8 +41,7 @@ var mu sync.Mutex
 
 func readCPUSnap() (cpuSnap, error) {
   b, err := os.ReadFile("/proc/stat"); if err != nil { return cpuSnap{}, err }
-  for _, line := range strings.Split(string(b), "
-") {
+  for _, line := range strings.Split(string(b), "\n") {
     if strings.HasPrefix(line, "cpu ") {
       f := strings.Fields(line)[1:]
       var total uint64; for _, x := range f { n,_ := strconv.ParseUint(x,10,64); total += n }
@@ -62,15 +61,13 @@ func cpuPercent() float64 {
 
 func memInfo() KV {
   b,_:=os.ReadFile("/proc/meminfo"); vals:=map[string]uint64{}
-  for _,l:=range strings.Split(string(b),"
-"){ f:=strings.Fields(l); if len(f)>=2 { n,_:=strconv.ParseUint(f[1],10,64); vals[strings.TrimSuffix(f[0],":")]=n*1024 } }
+  for _,l:=range strings.Split(string(b),"\n"){ f:=strings.Fields(l); if len(f)>=2 { n,_:=strconv.ParseUint(f[1],10,64); vals[strings.TrimSuffix(f[0],":")]=n*1024 } }
   total:=vals["MemTotal"]; avail:=vals["MemAvailable"]; return KV{Total:total,Available:avail,Used:total-avail}
 }
 
 func swapPercent() float64 {
   b,_:=os.ReadFile("/proc/meminfo"); var total,free uint64
-  for _,l:=range strings.Split(string(b),"
-"){ f:=strings.Fields(l); if len(f)>=2 && f[0]=="SwapTotal:" {total,_=strconv.ParseUint(f[1],10,64); total*=1024}; if len(f)>=2 && f[0]=="SwapFree:" {free,_=strconv.ParseUint(f[1],10,64); free*=1024} }
+  for _,l:=range strings.Split(string(b),"\n"){ f:=strings.Fields(l); if len(f)>=2 && f[0]=="SwapTotal:" {total,_=strconv.ParseUint(f[1],10,64); total*=1024}; if len(f)>=2 && f[0]=="SwapFree:" {free,_=strconv.ParseUint(f[1],10,64); free*=1024} }
   if total==0 {return 0}; return float64(total-free)/float64(total)*100
 }
 
@@ -86,8 +83,7 @@ func network() []Net {
   b,_:=os.ReadFile("/proc/net/dev"); now:=time.Now(); mu.Lock(); defer mu.Unlock()
   elapsed:=now.Sub(prevTime).Seconds(); if elapsed<=0 {elapsed=1}
   out:=[]Net{}
-  for _,l:=range strings.Split(string(b),"
-"){
+  for _,l:=range strings.Split(string(b),"\n"){
     if !strings.Contains(l,":"){continue}; p:=strings.SplitN(strings.TrimSpace(l),":",2); if len(p)!=2{continue}
     name:=strings.TrimSpace(p[0]); f:=strings.Fields(p[1]); if len(f)<12{continue}
     rx,_:=strconv.ParseUint(f[0],10,64); re,_:=strconv.ParseUint(f[2],10,64); rd,_:=strconv.ParseUint(f[3],10,64)
@@ -102,8 +98,7 @@ func docker() []Docker {
   if _,err:=exec.LookPath("docker");err!=nil{return []Docker{}}
   ctx,cancel:=context.WithTimeout(context.Background(),2*time.Second);defer cancel()
   out,err:=exec.CommandContext(ctx,"docker","ps","-a","--format","{{.Names}}|{{.State}}|{{.Status}}").Output();if err!=nil{return []Docker{}}
-  var list []Docker;for _,l:=range strings.Split(strings.TrimSpace(string(out)),"
-"){p:=strings.SplitN(l,"|",3);if len(p)==3{list=append(list,Docker{Name:p[0],State:p[1],Status:p[2]})}}
+  var list []Docker;for _,l:=range strings.Split(strings.TrimSpace(string(out)),"\n"){p:=strings.SplitN(l,"|",3);if len(p)==3{list=append(list,Docker{Name:p[0],State:p[1],Status:p[2]})}}
   return list
 }
 
