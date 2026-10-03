@@ -26,6 +26,7 @@ type Status struct {
   Server struct { Hostname string `json:"hostname"`; UptimeSeconds int64 `json:"uptime_seconds"` } `json:"server"`
   CPUPercent float64 `json:"cpu_percent"`
   Memory KV `json:"memory"`
+  RAMPercent float64 `json:"ram_percent"`
   SwapPercent float64 `json:"swap_percent"`
   Disks []Disk `json:"disks"`
   Network []Net `json:"network"`
@@ -110,7 +111,7 @@ func services() []Service {
 func collect() Status {
   var s Status; h,_:=os.Hostname();s.Server.Hostname=h
   up,_:=os.ReadFile("/proc/uptime"); f:=strings.Fields(string(up));if len(f)>0{v,_:=strconv.ParseFloat(f[0],64);s.Server.UptimeSeconds=int64(v)}
-  s.CPUPercent=cpuPercent();s.Memory=memInfo();s.SwapPercent=swapPercent()
+  s.CPUPercent=cpuPercent();s.Memory=memInfo();if s.Memory.Total>0{s.RAMPercent=float64(s.Memory.Used)/float64(s.Memory.Total)*100};s.SwapPercent=swapPercent()
   for _,m:=range []string{"/","/var","/home"}{if d,ok:=disk(m);ok{s.Disks=append(s.Disks,d)}}
   s.Network=network();s.Docker=docker();s.Services=services();s.Timestamp=time.Now().UTC();return s
 }
