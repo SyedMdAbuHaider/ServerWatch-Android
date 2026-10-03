@@ -1,0 +1,1 @@
+# ServerWatch release rules
