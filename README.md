@@ -16,7 +16,7 @@ A production-oriented Android server monitoring app with a lightweight Linux age
 
 ## Repository layout
 
-- `android/` — Kotlin + Jetpack Compose Android application
+- `app/` — Kotlin + Jetpack Compose Android application
 - `agent/` — Go Linux monitoring agent
 - `.github/workflows/build.yml` — Android and agent CI
 
@@ -44,4 +44,6 @@ For Internet exposure, use HTTPS and/or a private VPN such as WireGuard/Tailscal
 
 ## Build APK
 
-GitHub Actions builds `app-release.apk` from the `android/` project on every push to `main` and on version tags.
+GitHub Actions builds `app-release.apk` on pushes to `main` and on version tags.
+
+The release build is currently not code-signed with a user-owned keystore. For Play Store or production distribution, configure a repository secret/Gradle signing key before publishing.
